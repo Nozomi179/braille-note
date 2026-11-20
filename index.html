@@ -173,7 +173,7 @@
           <div class="flex items-center justify-between">
             <div>
               <p class="text-sm font-bold text-slate-800">6点入力パッド（打つ側）</p>
-              <p class="text-xs text-slate-500">打つとき：左 4・5・6 ／ 右 1・2・3（表示時に 1↔4, 2↔5, 3↔6 で反転）</p>
+              <p class="text-xs text-slate-500">打つとき：左 4・5・6 ／ 右 1・2・3（表示時に反転）</p>
             </div>
             <button
               id="btnClearPad"
@@ -200,30 +200,21 @@
             </div>
           </div>
 
-          <div class="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-200">
-            <div class="text-xs text-slate-600">
-              <span>打った点：</span>
-              <span id="padWriteDotsText" class="font-mono font-bold text-slate-800">なし</span>
-              <span class="mx-1">→</span>
-              <span>反転表示の点番号：</span>
-              <span id="padFlippedDotsText" class="font-mono font-bold text-blue-700">なし</span>
-            </div>
-            <div class="flex items-center gap-2">
-              <button
-                id="btnInsertSpace"
-                type="button"
-                class="px-3 py-1.5 text-xs rounded-lg border border-slate-300 bg-white hover:bg-slate-100 text-slate-700 font-medium"
-              >
-                空白（マスあけ）を追加
-              </button>
-              <button
-                id="btnAddCell"
-                type="button"
-                class="px-3 py-1.5 text-xs rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-medium"
-              >
-                このマスを追加
-              </button>
-            </div>
+          <div class="flex flex-wrap items-center justify-end gap-2 pt-2 border-t border-slate-200">
+            <button
+              id="btnInsertSpace"
+              type="button"
+              class="px-3 py-1.5 text-xs rounded-lg border border-slate-300 bg-white hover:bg-slate-100 text-slate-700 font-medium"
+            >
+              空白（マスあけ）を追加
+            </button>
+            <button
+              id="btnAddCell"
+              type="button"
+              class="px-3 py-1.5 text-xs rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-medium"
+            >
+              このマスを追加
+            </button>
           </div>
         </div>
 
@@ -303,9 +294,6 @@
     const noteMemoEl = document.getElementById('noteMemo');
     const braillePreviewEl = document.getElementById('braillePreview');
 
-    const padWriteDotsTextEl = document.getElementById('padWriteDotsText');
-    const padFlippedDotsTextEl = document.getElementById('padFlippedDotsText');
-
     // 左右反転対応表（点の位置・番号は変えず、1↔4, 2↔5, 3↔6 で左右のみ入れ替え）
     const FLIP_MAP = Object.freeze({
       1: 4,
@@ -364,10 +352,10 @@
       const dotsHtml = order
         .map((d) => `<span class="braille-dot ${set.has(d) ? 'on' : ''}"></span>`)
         .join('');
-      return `<span class="braille-cell" title="点字表示：${flippedDots.join(',') || 'なし'}">${dotsHtml}</span>`;
+      return `<span class="braille-cell" aria-label="点字マス">${dotsHtml}</span>`;
     }
 
-    // 点字文字列（例: "2,3,4,6 / 3"）をプレビュー表示
+    // 点字文字列（例: "2,3,4,6 / 3"）を点字表示（6点マス）に変換
     function renderBrailleSequence(brailleStr) {
       const trimmed = (brailleStr || '').trim();
       if (!trimmed) {
@@ -484,16 +472,10 @@
     }
 
     function updatePadUi() {
-      const writeSorted = Array.from(selectedPadDots).sort((a, b) => a - b);
-      const flippedSorted = flipDotsSorted(selectedPadDots);
-
       document.querySelectorAll('[data-pad-dot]').forEach((btn) => {
         const d = parseInt(btn.getAttribute('data-pad-dot'), 10);
         btn.classList.toggle('active', selectedPadDots.has(d));
       });
-
-      padWriteDotsTextEl.textContent = writeSorted.length ? writeSorted.join(',') : 'なし';
-      padFlippedDotsTextEl.textContent = flippedSorted.length ? flippedSorted.join(',') : 'なし';
     }
 
     function appendToBrailleInput(token) {
@@ -572,7 +554,7 @@
       updatePadUi();
     });
 
-    // 打つ側で選んだ点をそのまま記録し、表示時に反転する
+    // 打つ側で選んだ点を記録し、表示時に反転する
     document.getElementById('btnAddCell').addEventListener('click', () => {
       if (selectedPadDots.size === 0) return;
       const writeSorted = Array.from(selectedPadDots).sort((a, b) => a - b);
