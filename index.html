@@ -1,352 +1,617 @@
-```html
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>てんやくノート - 自分だけの点訳学習＆ルール検索帳</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    fontFamily: {
-                        sans: ['"Noto Sans JP"', 'Inter', 'sans-serif'],
-                    },
-                    colors: {
-                        paper: '#FAF7F2',
-                        cream: '#F3EDE2',
-                        ink: {
-                            800: '#27272A',
-                            900: '#18181B',
-                        },
-                        plum: {
-                            50: '#FAF5FF',
-                            100: '#F3E8FF',
-                            600: '#7E22CE',
-                            700: '#6B21A8',
-                            800: '#581C87',
-                        },
-                        terracotta: {
-                            50: '#FFF7ED',
-                            100: '#FFEDD5',
-                            600: '#C2410C',
-                            700: '#9A3412',
-                        }
-                    }
-                }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>てんやくノート - 点訳学習＆6点入力ノート</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Noto Sans JP"', 'Inter', 'sans-serif'],
+          },
+          colors: {
+            paper: '#FAF7F2',
+            cream: '#F3EDE2',
+            ink: {
+              800: '#27272A',
+              900: '#18181B',
+            },
+            plum: {
+              50: '#FAF5FF',
+              100: '#F3E8FF',
+              600: '#7E22CE',
+              700: '#6B21A8',
+              800: '#581C87',
+            },
+            terracotta: {
+              50: '#FFF7ED',
+              100: '#FFEDD5',
+              600: '#C2410C',
             }
+          }
         }
-    </script>
-    <style>
-        body {
-            background-color: #FAF7F2;
-            color: #18181B;
-            /* ノート帳のような微細な方眼背景 */
-            background-image: radial-gradient(#D6CFC2 0.85px, transparent 0.85px);
-            background-size: 20px 20px;
-            -webkit-tap-highlight-color: transparent;
-        }
-        /* 点字の凸凹を表現するボタン */
-        .braille-dot-btn {
-            transition: all 0.12s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-        .braille-dot-btn.active {
-            background-color: #581C87;
-            border-color: #581C87;
-            color: #FFFFFF;
-            box-shadow: 0 3px 8px rgba(88, 28, 135, 0.35), inset 0 1px 3px rgba(255, 255, 255, 0.3);
-            transform: scale(1.05);
-        }
-        .braille-dot-btn.inactive {
-            background-color: #FFFFFF;
-            border-color: #CBD5E1;
-            color: #475569;
-            box-shadow: inset 0 2px 4px rgba(15, 23, 42, 0.06);
-        }
-        .braille-dot-btn.inactive:hover {
-            border-color: #7E22CE;
-            background-color: #FAF5FF;
-        }
-        /* 点字マス目ガイド表示（Unicode点字ブロック用） */
-        .braille-cells-guided .b-cell {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            min-width: 1.55em;
-            height: 1.85em;
-            margin: 2px;
-            background-color: #FFFFFF;
-            border: 1.5px solid #D6CFC2;
-            border-radius: 6px;
-            box-shadow: 0 1px 2px rgba(0,0,0,0.04);
-        }
-        .braille-cells-guided .b-cell.is-space {
-            background-color: #F3EDE2;
-            border: 1.5px dashed #A8A29E;
-            position: relative;
-        }
-        .braille-cells-guided .b-cell.is-space::after {
-            content: '空白';
-            font-size: 9px;
-            color: #78716C;
-            font-family: "Noto Sans JP", sans-serif;
-            letter-spacing: -0.05em;
-        }
-        /* 点字隠し（テストモード） */
-        .braille-hidden-blur {
-            filter: blur(8px);
-            user-select: none;
-            opacity: 0.35;
-            transition: all 0.25s ease;
-        }
-        .braille-hidden-blur:hover {
-            filter: blur(4px);
-            opacity: 0.55;
-        }
-        /* カスタムスクロールバー */
-        ::-webkit-scrollbar {
-            width: 6px;
-            height: 6px;
-        }
-        ::-webkit-scrollbar-track {
-            background: #FAF7F2;
-        }
-        ::-webkit-scrollbar-thumb {
-            background: #C7BFA8;
-            border-radius: 9999px;
-        }
-    </style>
+      }
+    }
+  </script>
+  <style>
+    body {
+      background-color: #FAF7F2;
+      color: #18181B;
+    }
+    .dot-btn {
+      transition: transform 0.08s ease, background-color 0.12s ease, box-shadow 0.12s ease;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .dot-btn:active {
+      transform: scale(0.95);
+    }
+    .dot-active {
+      background-color: #7E22CE !important;
+      color: #FFFFFF !important;
+      border-color: #581C87 !important;
+      box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.25);
+    }
+  </style>
 </head>
-<body class="min-h-screen flex flex-col font-sans antialiased selection:bg-plum-100 selection:text-plum-800">
-
-    <!-- ========================================== -->
-    <!-- ヘッダー                                   -->
-    <!-- ========================================== -->
-    <header class="bg-white/95 backdrop-blur-md border-b border-stone-200 sticky top-0 z-30 shadow-sm">
-        <div class="max-w-6xl mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-3">
-            <!-- ブランドロゴ -->
-            <div class="flex items-center gap-3">
-                <div class="w-10 h-10 bg-plum-800 rounded-xl flex items-center justify-center shadow-sm border border-plum-700">
-                    <svg width="20" height="26" viewBox="0 0 18 24" fill="none">
-                        <circle cx="5" cy="4" r="2.2" fill="#FFFFFF"/>
-                        <circle cx="13" cy="4" r="2.2" fill="#FDBA74"/>
-                        <circle cx="5" cy="12" r="2.2" fill="#FFFFFF"/>
-                        <circle cx="13" cy="12" r="1.2" fill="#A855F7"/>
-                        <circle cx="5" cy="20" r="1.2" fill="#A855F7"/>
-                        <circle cx="13" cy="20" r="2.2" fill="#FFFFFF"/>
-                    </svg>
-                </div>
-                <div>
-                    <h1 class="text-lg sm:text-xl font-bold text-ink-900 tracking-tight leading-none flex items-center gap-2">
-                        <span>てんやくノート</span>
-                        <span class="text-[11px] font-bold bg-plum-100 text-plum-800 px-2 py-0.5 rounded-full">My点訳帳</span>
-                    </h1>
-                    <p class="text-[11px] text-stone-500 mt-1">覚え書きを自由に記録・いつでも高速検索</p>
-                </div>
-            </div>
-
-            <!-- アクションボタン群 -->
-            <div class="flex items-center gap-2">
-                <button type="button" onclick="toggleRefModal(true)" class="flex items-center gap-1.5 bg-cream hover:bg-stone-200 text-ink-800 border border-stone-300 text-xs sm:text-sm font-bold px-3 py-2 rounded-xl transition active:scale-95" title="五十音・符号の点字一覧表">
-                    <span>📖 点字表</span>
-                </button>
-
-                <button type="button" onclick="toggleDataModal(true)" class="flex items-center gap-1.5 bg-white hover:bg-stone-50 text-stone-700 border border-stone-300 text-xs sm:text-sm font-medium px-3 py-2 rounded-xl transition active:scale-95" title="ノートの保存・読み込み">
-                    <span>💾 保存/読込</span>
-                </button>
-
-                <button type="button" onclick="openEditorModal()" class="flex items-center gap-1.5 bg-plum-700 hover:bg-plum-800 text-white text-xs sm:text-sm font-bold px-4 py-2 rounded-xl shadow-md shadow-plum-700/20 transition active:scale-95">
-                    <span class="text-base leading-none">＋</span>
-                    <span>新しいノート</span>
-                </button>
-            </div>
+<body class="min-h-screen antialiased">
+  <div class="max-w-3xl mx-auto px-4 py-6 sm:px-6 sm:py-8">
+    <!-- ヘッダー -->
+    <header class="mb-6 bg-white/90 border border-stone-200 rounded-2xl p-4 sm:p-5 shadow-sm">
+      <div class="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h1 class="text-xl sm:text-2xl font-bold text-ink-900 tracking-tight">
+            てんやくノート
+          </h1>
+          <p class="text-xs sm:text-sm text-stone-600 mt-1">
+            打つときは右側（1・2・3）／左側（4・5・6）、ノート表示（読むとき）は左側（1・2・3）／右側（4・5・6）に自動反転します。
+          </p>
         </div>
+        <div class="flex items-center gap-2">
+          <button
+            type="button"
+            onclick="exportNotes()"
+            class="px-3 py-1.5 text-xs font-medium rounded-lg border border-stone-300 bg-cream hover:bg-stone-200 text-ink-800"
+          >
+            書き出し保存
+          </button>
+          <label class="px-3 py-1.5 text-xs font-medium rounded-lg border border-stone-300 bg-cream hover:bg-stone-200 text-ink-800 cursor-pointer">
+            読み込み
+            <input type="file" accept=".json" onchange="importNotes(event)" class="hidden">
+          </label>
+        </div>
+      </div>
     </header>
 
-    <!-- ========================================== -->
-    <!-- メインコンテンツ：検索＆ノート一覧         -->
-    <!-- ========================================== -->
-    <main class="flex-1 max-w-6xl w-full mx-auto px-4 py-6 space-y-6">
+    <!-- ノート入力フォーム -->
+    <section class="bg-white border border-stone-200 rounded-2xl p-4 sm:p-6 shadow-sm mb-6">
+      <h2 class="text-base sm:text-lg font-bold text-ink-900 mb-4">新しいメモを記録</h2>
 
-        <!-- 検索・フィルタ・表示設定コントロールパネル -->
-        <section class="bg-white p-4 sm:p-5 rounded-2xl border border-stone-200 shadow-sm space-y-4">
-            <!-- 大型検索バー -->
-            <div class="relative">
-                <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                    <svg class="w-5 h-5 text-stone-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-                    </svg>
-                </div>
-                <input type="text" id="search-input" oninput="handleSearchChange()"
-                    placeholder="タイトル・墨字・点字・解説メモ・タグで瞬時に検索（例：分かち書き、数符、助詞、は...）"
-                    class="w-full pl-11 pr-24 py-3.5 bg-paper border-2 border-stone-300 focus:border-plum-600 focus:bg-white rounded-xl text-sm sm:text-base font-medium text-ink-900 placeholder:text-stone-400 focus:outline-none transition">
-                <button type="button" id="btn-clear-search" onclick="clearSearch()" class="hidden absolute inset-y-2 right-2 px-3 bg-stone-200 hover:bg-stone-300 text-stone-700 text-xs font-bold rounded-lg transition">
-                    クリア
-                </button>
-            </div>
-
-            <!-- タグフィルターバー -->
-            <div class="flex flex-wrap items-center gap-1.5">
-                <span class="text-xs font-bold text-stone-500 mr-1 flex items-center gap-1">
-                    <span>🏷️ タグ絞り込み:</span>
-                </span>
-                <div id="tag-filter-list" class="flex flex-wrap items-center gap-1.5">
-                    <!-- JSで動的生成 -->
-                </div>
-            </div>
-
-            <!-- 表示オプション＆件数ステータス -->
-            <div class="pt-3 border-t border-stone-100 flex flex-wrap items-center justify-between gap-3 text-xs">
-                <div class="flex items-center gap-2 text-stone-600">
-                    <span>表示中: <strong id="notes-count-label" class="text-ink-900 text-sm">0</strong> 件</span>
-                    <span id="active-filter-badge" class="hidden bg-plum-100 text-plum-800 px-2 py-0.5 rounded-md font-bold">絞り込み中</span>
-                </div>
-
-                <div class="flex flex-wrap items-center gap-3 sm:gap-4">
-                    <!-- マス目ガイド切替 -->
-                    <label class="inline-flex items-center gap-1.5 cursor-pointer select-none text-ink-800 font-medium">
-                        <input type="checkbox" id="toggle-cell-guides" checked onchange="renderNotes()" class="rounded text-plum-700 focus:ring-plum-600 w-4 h-4">
-                        <span>マス目ガイド（空白可視化）</span>
-                    </label>
-
-                    <!-- 点字を隠してテスト切替 -->
-                    <button type="button" id="btn-toggle-test-mode" onclick="toggleTestMode()"
-                        class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-terracotta-600/30 bg-terracotta-50 hover:bg-terracotta-100 text-terracotta-700 font-bold transition">
-                        <span id="test-mode-icon">🙈</span>
-                        <span id="test-mode-text">点字を隠してテスト</span>
-                    </button>
-                </div>
-            </div>
-        </section>
-
-        <!-- ノートカード一覧グリッド -->
-        <section id="notes-grid" class="grid grid-cols-1 md:grid-cols-2 gap-5">
-            <!-- JSでカード描画 -->
-        </section>
-
-        <!-- 検索結果0件時のエンプティステート -->
-        <div id="empty-state" class="hidden bg-white p-10 rounded-2xl border border-stone-200 text-center space-y-3">
-            <div class="text-4xl">🔍</div>
-            <h3 class="text-base font-bold text-ink-900">一致するノートが見つかりませんでした</h3>
-            <p class="text-xs text-stone-500">検索キーワードを変えるか、新しいノートとしてルールを書き留めてみましょう。</p>
-            <div class="pt-2 flex justify-center gap-2">
-                <button type="button" onclick="resetAllFilters()" class="px-4 py-2 rounded-xl bg-stone-100 hover:bg-stone-200 text-xs font-bold text-stone-700 transition">
-                    検索・タグをリセット
-                </button>
-                <button type="button" onclick="openEditorModal()" class="px-4 py-2 rounded-xl bg-plum-700 hover:bg-plum-800 text-xs font-bold text-white transition">
-                    ＋ この内容でノートを作成
-                </button>
-            </div>
+      <form id="note-form" onsubmit="saveNote(event)" class="space-y-4">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label for="note-title" class="block text-xs font-semibold text-stone-700 mb-1">
+              タイトル・見出し
+            </label>
+            <input
+              id="note-title"
+              type="text"
+              required
+              placeholder="例：濁点・半濁音、拗音、数字符など"
+              class="w-full rounded-xl border border-stone-300 bg-paper px-3.5 py-2 text-sm text-ink-900 focus:outline-none focus:ring-2 focus:ring-plum-600"
+            >
+          </div>
+          <div>
+            <label for="note-category" class="block text-xs font-semibold text-stone-700 mb-1">
+              分類
+            </label>
+            <select
+              id="note-category"
+              class="w-full rounded-xl border border-stone-300 bg-paper px-3.5 py-2 text-sm text-ink-900 focus:outline-none focus:ring-2 focus:ring-plum-600"
+            >
+              <option value="点字の型">点字の型</option>
+              <option value="点訳ルール">点訳ルール</option>
+              <option value="記号・数字・句読点">記号・数字・句読点</option>
+              <option value="気づき・メモ">気づき・メモ</option>
+            </select>
+          </div>
         </div>
-    </main>
 
-    <!-- ========================================== -->
-    <!-- ノート追加・編集モーダル（点字入力パッド統合）-->
-    <!-- ========================================== -->
-    <div id="editor-modal" class="fixed inset-0 z-50 hidden bg-ink-900/60 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4 overflow-y-auto">
-        <div class="bg-white w-full max-w-4xl max-h-[94vh] rounded-2xl shadow-2xl border border-stone-200 flex flex-col overflow-hidden my-auto">
-            <!-- モーダルヘッダー -->
-            <div class="px-5 py-3.5 border-b border-stone-200 flex items-center justify-between bg-cream">
-                <h2 id="editor-modal-title" class="text-base sm:text-lg font-bold text-ink-900 flex items-center gap-2">
-                    <span>✍️ 新しい点訳ノートを追加</span>
-                </h2>
-                <button type="button" onclick="closeEditorModal()" class="p-1.5 rounded-xl hover:bg-stone-200 text-stone-600 transition">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                    </svg>
-                </button>
+        <!-- 6点入力パッド（打つ向き：右列1-2-3 / 左列4-5-6） -->
+        <div class="rounded-2xl border border-plum-100 bg-plum-50/60 p-4">
+          <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+            <div>
+              <p class="text-xs sm:text-sm font-bold text-plum-800">
+                6点入力（打つときの配置：右＝1・2・3／左＝4・5・6）
+              </p>
+              <p class="text-[11px] text-stone-600">
+                PCキー操作：J=1, K=2, L=3（右手・右側）／F=4, D=5, S=6（左手・左側）
+              </p>
+            </div>
+            <button
+              type="button"
+              onclick="clearCurrentDots()"
+              class="px-2.5 py-1 text-xs rounded-lg border border-stone-300 bg-white hover:bg-stone-100 text-stone-700"
+            >
+              選択クリア
+            </button>
+          </div>
+
+          <!-- 左側に4,5,6、右側に1,2,3を配置 -->
+          <div class="grid grid-cols-2 gap-4 max-w-xs mx-auto my-2">
+            <div class="flex flex-col items-center gap-2">
+              <span class="text-[11px] font-semibold text-stone-500">左側（打つ4・5・6）</span>
+              <button type="button" id="btn-dot-4" onclick="toggleDot(4)" class="dot-btn w-14 h-14 rounded-full border-2 border-stone-300 bg-white text-sm font-bold text-ink-900 flex flex-col items-center justify-center">
+                <span>4</span>
+                <span class="text-[10px] font-normal text-stone-500">F</span>
+              </button>
+              <button type="button" id="btn-dot-5" onclick="toggleDot(5)" class="dot-btn w-14 h-14 rounded-full border-2 border-stone-300 bg-white text-sm font-bold text-ink-900 flex flex-col items-center justify-center">
+                <span>5</span>
+                <span class="text-[10px] font-normal text-stone-500">D</span>
+              </button>
+              <button type="button" id="btn-dot-6" onclick="toggleDot(6)" class="dot-btn w-14 h-14 rounded-full border-2 border-stone-300 bg-white text-sm font-bold text-ink-900 flex flex-col items-center justify-center">
+                <span>6</span>
+                <span class="text-[10px] font-normal text-stone-500">S</span>
+              </button>
             </div>
 
-            <!-- モーダルボディ（2カラム構成：左はノート入力、右は点字作成ツール） -->
-            <div class="p-5 overflow-y-auto grid grid-cols-1 lg:grid-cols-12 gap-6">
-                <input type="hidden" id="edit-note-id">
+            <div class="flex flex-col items-center gap-2">
+              <span class="text-[11px] font-semibold text-stone-500">右側（打つ1・2・3）</span>
+              <button type="button" id="btn-dot-1" onclick="toggleDot(1)" class="dot-btn w-14 h-14 rounded-full border-2 border-stone-300 bg-white text-sm font-bold text-ink-900 flex flex-col items-center justify-center">
+                <span>1</span>
+                <span class="text-[10px] font-normal text-stone-500">J</span>
+              </button>
+              <button type="button" id="btn-dot-2" onclick="toggleDot(2)" class="dot-btn w-14 h-14 rounded-full border-2 border-stone-300 bg-white text-sm font-bold text-ink-900 flex flex-col items-center justify-center">
+                <span>2</span>
+                <span class="text-[10px] font-normal text-stone-500">K</span>
+              </button>
+              <button type="button" id="btn-dot-3" onclick="toggleDot(3)" class="dot-btn w-14 h-14 rounded-full border-2 border-stone-300 bg-white text-sm font-bold text-ink-900 flex flex-col items-center justify-center">
+                <span>3</span>
+                <span class="text-[10px] font-normal text-stone-500">L</span>
+              </button>
+            </div>
+          </div>
 
-                <!-- 左カラム：ノート本文フォーム -->
-                <div class="lg:col-span-7 space-y-4">
-                    <div>
-                        <label class="block text-xs font-bold text-ink-800 mb-1">タイトル <span class="text-terracotta-600">*</span></label>
-                        <input type="text" id="edit-title" placeholder="例：助詞の「は」「へ」「を」の点訳ルール"
-                            class="w-full px-3.5 py-2.5 bg-paper border border-stone-300 focus:border-plum-600 focus:bg-white rounded-xl text-sm font-bold focus:outline-none">
-                    </div>
+          <!-- 入力中のプレビュー（打つ向き＆読む向き反転プレビュー） -->
+          <div class="mt-4 pt-3 border-t border-plum-100 flex flex-col sm:flex-row items-center justify-between gap-3">
+            <div class="flex items-center gap-4">
+              <div class="text-center">
+                <div class="text-[10px] text-stone-500 mb-1">打つ向き</div>
+                <div id="write-preview" class="w-14 h-20 rounded-xl border border-stone-300 bg-white grid grid-cols-2 grid-rows-3 place-items-center p-1.5"></div>
+              </div>
+              <div class="text-stone-400 font-bold text-sm">→ 反転 →</div>
+              <div class="text-center">
+                <div class="text-[10px] font-semibold text-plum-700 mb-1">読む向き（左123/右456）</div>
+                <div id="read-preview" class="w-14 h-20 rounded-xl border-2 border-plum-600 bg-white grid grid-cols-2 grid-rows-3 place-items-center p-1.5"></div>
+              </div>
+            </div>
 
-                    <div>
-                        <label class="block text-xs font-bold text-ink-800 mb-1">タグ（カンマ・スペース区切りで複数入力可）</label>
-                        <input type="text" id="edit-tags" placeholder="例：助詞, 基本ルール, よく間違える"
-                            class="w-full px-3.5 py-2 bg-paper border border-stone-300 focus:border-plum-600 focus:bg-white rounded-xl text-xs font-medium focus:outline-none">
-                        <!-- 既存タグからワンクリック追加 -->
-                        <div id="editor-quick-tags" class="flex flex-wrap gap-1 mt-1.5"></div>
-                    </div>
+            <div class="flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                onclick="addCellToSequence()"
+                class="px-3.5 py-2 rounded-xl bg-plum-600 hover:bg-plum-700 text-white text-xs sm:text-sm font-semibold shadow-sm"
+              >
+                この1マスを追加
+              </button>
+              <button
+                type="button"
+                onclick="addSpaceCell()"
+                class="px-3 py-2 rounded-xl border border-stone-300 bg-white hover:bg-stone-100 text-xs sm:text-sm text-stone-700"
+              >
+                空白マス
+              </button>
+            </div>
+          </div>
 
-                    <div>
-                        <label class="block text-xs font-bold text-ink-800 mb-1">墨字（通常の文章・例文）</label>
-                        <input type="text" id="edit-sumiji" placeholder="例：わたしは 学校へ 本を 買いに 行く。"
-                            class="w-full px-3.5 py-2 bg-paper border border-stone-300 focus:border-plum-600 focus:bg-white rounded-xl text-sm focus:outline-none">
-                    </div>
+          <!-- 並べた点字マス列（読む向き：左123/右456） -->
+          <div class="mt-3">
+            <div class="flex items-center justify-between text-xs text-stone-600 mb-1.5">
+              <span>記録する点字列（読む向き・左から順に並びます）</span>
+              <button type="button" onclick="clearSequence()" class="text-terracotta-600 hover:underline">
+                点字列を消す
+              </button>
+            </div>
+            <div id="sequence-box" class="min-h-[88px] rounded-xl border border-dashed border-stone-300 bg-white p-2.5 flex flex-wrap items-center gap-2">
+              <span class="text-xs text-stone-400">まだ点字マスがありません。「この1マスを追加」を押すとここに並びます。</span>
+            </div>
+          </div>
+        </div>
 
-                    <div>
-                        <div class="flex items-center justify-between mb-1">
-                            <label class="text-xs font-bold text-ink-800">点字・点訳例（Unicode点字）</label>
-                            <div class="flex items-center gap-1.5">
-                                <button type="button" onclick="insertSpaceToBrailleField()" class="text-[11px] bg-cream hover:bg-stone-200 text-ink-800 border border-stone-300 px-2 py-0.5 rounded font-bold transition">
-                                    ＋ マスあけ(空白)
-                                </button>
-                                <button type="button" onclick="backspaceBrailleField()" class="text-[11px] bg-stone-100 hover:bg-stone-200 text-stone-600 px-2 py-0.5 rounded font-medium transition">
-                                    ← 1マス消す
-                                </button>
-                            </div>
-                        </div>
-                        <textarea id="edit-braille" rows="2" placeholder="右側の「点字入力パッド」または「かんたん変換」から挿入できます"
-                            class="w-full px-3.5 py-2.5 bg-plum-50/40 border-2 border-plum-200 focus:border-plum-600 focus:bg-white rounded-xl text-xl tracking-widest font-mono focus:outline-none"></textarea>
-                    </div>
+        <!-- ノート本文 -->
+        <div>
+          <label for="note-body" class="block text-xs font-semibold text-stone-700 mb-1">
+            メモ・ルールの説明
+          </label>
+          <textarea
+            id="note-body"
+            rows="3"
+            placeholder="例：打つときは右123・左456で押す。読むときは左123・右456で見る。"
+            class="w-full rounded-xl border border-stone-300 bg-paper px-3.5 py-2 text-sm text-ink-900 focus:outline-none focus:ring-2 focus:ring-plum-600"
+          ></textarea>
+        </div>
 
-                    <div>
-                        <label class="block text-xs font-bold text-ink-800 mb-1">解説・ポイントメモ</label>
-                        <textarea id="edit-memo" rows="3" placeholder="自分の言葉で覚え方や例外ルール、注意点などを自由に書き留めましょう。"
-                            class="w-full px-3.5 py-2.5 bg-paper border border-stone-300 focus:border-plum-600 focus:bg-white rounded-xl text-sm leading-relaxed focus:outline-none"></textarea>
-                    </div>
+        <button
+          type="submit"
+          class="w-full sm:w-auto px-6 py-2.5 rounded-xl bg-ink-900 hover:bg-ink-800 text-white text-sm font-bold shadow-sm"
+        >
+          ノートに保存する
+        </button>
+      </form>
+    </section>
+
+    <!-- 検索＆フィルター -->
+    <section class="mb-4 flex flex-col sm:flex-row gap-2.5">
+      <input
+        id="search-input"
+        type="search"
+        oninput="renderNotes()"
+        placeholder="タイトルやメモで検索..."
+        class="flex-1 rounded-xl border border-stone-300 bg-white px-3.5 py-2 text-sm text-ink-900 focus:outline-none focus:ring-2 focus:ring-plum-600"
+      >
+      <select
+        id="filter-category"
+        onchange="renderNotes()"
+        class="rounded-xl border border-stone-300 bg-white px-3.5 py-2 text-sm text-ink-900 focus:outline-none focus:ring-2 focus:ring-plum-600"
+      >
+        <option value="ALL">すべての分類</option>
+        <option value="点字の型">点字の型</option>
+        <option value="点訳ルール">点訳ルール</option>
+        <option value="記号・数字・句読点">記号・数字・句読点</option>
+        <option value="気づき・メモ">気づき・メモ</option>
+      </select>
+    </section>
+
+    <!-- 保存済みノート一覧 -->
+    <section id="notes-list" class="space-y-3"></section>
+  </div>
+
+  <script>
+    const STORAGE_KEY = 'tenyaku_note_v1';
+    let selectedWriteDots = new Set(); // 打つときの点番号（1〜6）
+    let currentSequence = [];        // 読む向きの点字マス配列（各要素は [1..6] の配列）
+    let notes = loadInitialNotes();
+
+    // 打つときの点（1..6）を、読むときの点（1..6）へ左右反転する対応表
+    // 打つとき：右列 1,2,3 / 左列 4,5,6
+    // 読むとき：左列 1,2,3 / 右列 4,5,6
+    const WRITE_TO_READ_DOT = {
+      1: 4,
+      2: 5,
+      3: 6,
+      4: 1,
+      5: 2,
+      6: 3
+    };
+
+    // 読む向きのマス（左列1,2,3 / 右列4,5,6）のグリッド位置（row 0..2, col 0..1）
+    const READ_GRID_MAP = [
+      { dot: 1, row: 0, col: 0 },
+      { dot: 4, row: 0, col: 1 },
+      { dot: 2, row: 1, col: 0 },
+      { dot: 5, row: 1, col: 1 },
+      { dot: 3, row: 2, col: 0 },
+      { dot: 6, row: 2, col: 1 }
+    ];
+
+    // 打つ向きのマス（左列4,5,6 / 右列1,2,3）のグリッド位置
+    const WRITE_GRID_MAP = [
+      { dot: 4, row: 0, col: 0 },
+      { dot: 1, row: 0, col: 1 },
+      { dot: 5, row: 1, col: 0 },
+      { dot: 2, row: 1, col: 1 },
+      { dot: 6, row: 2, col: 0 },
+      { dot: 3, row: 2, col: 1 }
+    ];
+
+    function loadInitialNotes() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (Array.isArray(parsed)) return parsed;
+        }
+      } catch (e) {
+        console.warn('読み込みエラー:', e);
+      }
+      return [
+        {
+          id: 'sample-1',
+          title: '「あ」の点字（読む向き：左1）',
+          category: '点字の型',
+          body: '打つときは右上の1を押すと、読む向きでは左上の1として記録されます。',
+          cells: [[1]],
+          createdAt: new Date().toLocaleDateString('ja-JP')
+        }
+      ];
+    }
+
+    function persistNotes() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(notes));
+    }
+
+    function toggleDot(dotNum) {
+      if (selectedWriteDots.has(dotNum)) {
+        selectedWriteDots.delete(dotNum);
+      } else {
+        selectedWriteDots.add(dotNum);
+      }
+      updateInputUI();
+    }
+
+    function clearCurrentDots() {
+      selectedWriteDots.clear();
+      updateInputUI();
+    }
+
+    function getFlippedReadDots() {
+      const flipped = [];
+      selectedWriteDots.forEach((wDot) => {
+        const rDot = WRITE_TO_READ_DOT[wDot];
+        if (rDot) flipped.push(rDot);
+      });
+      return flipped.sort((a, b) => a - b);
+    }
+
+    function buildMiniCellHtml(activeDots, gridMap, activeColorClass) {
+      const set = new Set(activeDots || []);
+      let html = '';
+      for (let r = 0; r < 3; r++) {
+        for (let c = 0; c < 2; c++) {
+          const item = gridMap.find((m) => m.row === r && m.col === c);
+          const isOn = item && set.has(item.dot);
+          html += `<span class="w-2.5 h-2.5 rounded-full ${isOn ? activeColorClass : 'bg-stone-200'}"></span>`;
+        }
+      }
+      return html;
+    }
+
+    function updateInputUI() {
+      for (let d = 1; d <= 6; d++) {
+        const btn = document.getElementById(`btn-dot-${d}`);
+        if (!btn) continue;
+        if (selectedWriteDots.has(d)) {
+          btn.classList.add('dot-active');
+        } else {
+          btn.classList.remove('dot-active');
+        }
+      }
+
+      const writeArr = Array.from(selectedWriteDots);
+      const readArr = getFlippedReadDots();
+
+      document.getElementById('write-preview').innerHTML =
+        buildMiniCellHtml(writeArr, WRITE_GRID_MAP, 'bg-stone-700');
+      document.getElementById('read-preview').innerHTML =
+        buildMiniCellHtml(readArr, READ_GRID_MAP, 'bg-plum-600');
+
+      renderSequenceBox();
+    }
+
+    function addCellToSequence() {
+      const readArr = getFlippedReadDots();
+      currentSequence.push(readArr);
+      selectedWriteDots.clear();
+      updateInputUI();
+    }
+
+    function addSpaceCell() {
+      currentSequence.push([]);
+      updateInputUI();
+    }
+
+    function removeCellAt(index) {
+      currentSequence.splice(index, 1);
+      renderSequenceBox();
+    }
+
+    function clearSequence() {
+      currentSequence = [];
+      renderSequenceBox();
+    }
+
+    function renderSequenceBox() {
+      const box = document.getElementById('sequence-box');
+      if (currentSequence.length === 0) {
+        box.innerHTML = '<span class="text-xs text-stone-400">まだ点字マスがありません。「この1マスを追加」を押すとここに並びます。</span>';
+        return;
+      }
+
+      box.innerHTML = currentSequence.map((dots, idx) => {
+        const label = dots.length > 0 ? `左/右:${dots.join(',')}` : '空白';
+        return `
+          <div class="group relative flex flex-col items-center rounded-xl border border-plum-200 bg-plum-50/40 px-2.5 py-2">
+            <div class="w-11 h-16 rounded-lg border border-stone-300 bg-white grid grid-cols-2 grid-rows-3 place-items-center p-1">
+              ${buildMiniCellHtml(dots, READ_GRID_MAP, 'bg-plum-600')}
+            </div>
+            <span class="text-[10px] text-stone-600 mt-1">${label}</span>
+            <button
+              type="button"
+              onclick="removeCellAt(${idx})"
+              title="このマスを削除"
+              class="mt-1 text-[10px] text-terracotta-600 hover:underline"
+            >
+              削除
+            </button>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function saveNote(event) {
+      event.preventDefault();
+      const titleInput = document.getElementById('note-title');
+      const categoryInput = document.getElementById('note-category');
+      const bodyInput = document.getElementById('note-body');
+
+      const title = titleInput.value.trim();
+      if (!title) return;
+
+      // 未追加の選択中の点があれば、自動で反転して1マス追加する
+      let cellsToSave = currentSequence.map((c) => [...c]);
+      if (selectedWriteDots.size > 0) {
+        cellsToSave.push(getFlippedReadDots());
+      }
+
+      const newNote = {
+        id: String(Date.now()),
+        title,
+        category: categoryInput.value,
+        body: bodyInput.value.trim(),
+        cells: cellsToSave,
+        createdAt: new Date().toLocaleDateString('ja-JP')
+      };
+
+      notes.unshift(newNote);
+      persistNotes();
+
+      titleInput.value = '';
+      bodyInput.value = '';
+      selectedWriteDots.clear();
+      currentSequence = [];
+      updateInputUI();
+      renderNotes();
+    }
+
+    function deleteNote(id) {
+      notes = notes.filter((n) => n.id !== id);
+      persistNotes();
+      renderNotes();
+    }
+
+    function renderNotes() {
+      const listEl = document.getElementById('notes-list');
+      const q = (document.getElementById('search-input').value || '').trim().toLowerCase();
+      const cat = document.getElementById('filter-category').value;
+
+      const filtered = notes.filter((n) => {
+        const matchCat = cat === 'ALL' || n.category === cat;
+        const text = `${n.title} ${n.body} ${n.category}`.toLowerCase();
+        const matchQ = !q || text.includes(q);
+        return matchCat && matchQ;
+      });
+
+      if (filtered.length === 0) {
+        listEl.innerHTML = `
+          <div class="rounded-2xl border border-stone-200 bg-white p-6 text-center text-sm text-stone-500">
+            該当するノートはまだありません。上のフォームから記録してみましょう。
+          </div>
+        `;
+        return;
+      }
+
+      listEl.innerHTML = filtered.map((n) => {
+        const cellsHtml = Array.isArray(n.cells) && n.cells.length > 0
+          ? `<div class="flex flex-wrap items-center gap-2 my-3">
+              ${n.cells.map((dots) => `
+                <div class="flex flex-col items-center">
+                  <div class="w-11 h-16 rounded-lg border border-stone-300 bg-paper grid grid-cols-2 grid-rows-3 place-items-center p-1">
+                    ${buildMiniCellHtml(dots, READ_GRID_MAP, 'bg-plum-700')}
+                  </div>
+                  <span class="text-[10px] text-stone-500 mt-0.5">${dots.length ? dots.join(',') : '空白'}</span>
                 </div>
+              `).join('')}
+            </div>`
+          : '';
 
-                <!-- 右カラム：点字入力補助ツール（6点パッド＆自動変換） -->
-                <div class="lg:col-span-5 bg-paper p-4 rounded-2xl border border-stone-200 space-y-4 flex flex-col justify-between">
-                    <!-- ツール1：かんたんひらがな→点字変換挿入 -->
-                    <div class="bg-white p-3.5 rounded-xl border border-stone-200 space-y-2">
-                        <div class="flex items-center justify-between">
-                            <span class="text-xs font-bold text-plum-800">✨ かんたん点字変換して挿入</span>
-                            <span class="text-[10px] text-stone-400">ひらがな・数字対応</span>
-                        </div>
-                        <div class="flex gap-1.5">
-                            <input type="text" id="quick-conv-input" oninput="updateQuickConvPreview()" placeholder="例：わたしわ 123"
-                                class="flex-1 px-2.5 py-1.5 bg-paper border border-stone-300 rounded-lg text-xs focus:border-plum-600 focus:outline-none">
-                            <button type="button" onclick="insertConvertedBraille()" class="px-3 py-1.5 bg-plum-700 hover:bg-plum-800 text-white text-xs font-bold rounded-lg whitespace-nowrap transition">
-                                挿入 ↓
-                            </button>
-                        </div>
-                        <div id="quick-conv-preview" class="text-base tracking-widest text-ink-900 bg-paper px-2.5 py-1.5 rounded-lg border border-dashed border-stone-300 min-h-[2rem] flex items-center overflow-x-auto">
-                            <span class="text-[11px] text-stone-400 tracking-normal">変換プレビューがここに表示されます</span>
-                        </div>
-                    </div>
+        return `
+          <article class="rounded-2xl border border-stone-200 bg-white p-4 sm:p-5 shadow-sm">
+            <div class="flex items-start justify-between gap-2">
+              <div>
+                <span class="inline-block text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-plum-100 text-plum-800 mb-1">
+                  ${escapeHtml(n.category)}
+                </span>
+                <h3 class="text-base sm:text-lg font-bold text-ink-900">${escapeHtml(n.title)}</h3>
+              </div>
+              <div class="flex items-center gap-2 text-xs text-stone-400">
+                <span>${escapeHtml(n.createdAt || '')}</span>
+                <button
+                  type="button"
+                  onclick="deleteNote('${n.id}')"
+                  class="text-terracotta-600 hover:underline font-medium"
+                >
+                  削除
+                </button>
+              </div>
+            </div>
+            ${cellsHtml}
+            ${n.body ? `<p class="text-sm text-stone-700 whitespace-pre-line leading-relaxed">${escapeHtml(n.body)}</p>` : ''}
+          </article>
+        `;
+      }).join('');
+    }
 
-                    <!-- ツール2：6点点字入力パッド -->
-                    <div class="bg-white p-3.5 rounded-xl border border-stone-200 space-y-3">
-                        <div class="flex items-center justify-between">
-                            <span class="text-xs font-bold text-ink-900">👆 6点入力パッド（1マス作成）</span>
-                            <span class="text-[10px] font-mono text-stone-500">FDS / JKL</span>
-                        </div>
+    function escapeHtml(str) {
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
 
-                        <div class="flex items-center justify-around gap-3 py-2">
-                            <!-- 6点ボタン -->
-                            <div class="grid grid-cols-2 gap-3 bg-paper p-3 rounded-2xl border border-stone-200">
-                                <div class="flex flex-col gap-2.5">
-                                    <button type="button" onclick="toggleEditorDot(1)" id="ed-dot-1" class="braille-dot-btn inactive w-11 h-11 rounded-full border-2 font-bold text-xs">1</button>
-                                    <button type="button" onclick="toggleEditorDot(2)" id="ed-dot-2" class="braille-dot-btn inactive w-11 h-11 rounded-full border-2 font-bold text-xs">2</button>
-                                    <button type="button" onclick="toggleEditorDot(3)" id="ed-dot-3" class="braille-dot-btn inactive w-11 h-11 rounded-full border-2 font-bold text-xs">3</button>
-                                </div>
-                                <div class="flex flex-col gap-2.5">
-                                    <button type="button" onclick="toggleEditorDot(4)" id="ed-dot-4" class="braille-dot-btn inactive w-11 h-11 rounded-full border-2 font-bold text-xs">4</button>
-                                    <button type="button" onclick="toggleEditorDot(5)" id="ed-dot-5" class="braille-dot-btn inactive w-11 h-11 rounded-full border-2 font-bold text-xs">5</button>
-                                    <button type="button" onclick="toggleEditorDot(6)" id="ed-dot-6" class="braille-dot-btn inactive w-11 h-11 rounded-full border-2 font-bold text-xs">6</button>
-   
+    function exportNotes() {
+      const blob = new Blob([JSON.stringify(notes, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `tenyaku-note-${new Date().toISOString().slice(0, 10)}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function importNotes(event) {
+      const file = event.target.files && event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        try {
+          const imported = JSON.parse(reader.result);
+          if (!Array.isArray(imported)) throw new Error('形式が異なります');
+          const existingIds = new Set(notes.map((n) => n.id));
+          const merged = [...imported.filter((n) => !existingIds.has(n.id)), ...notes];
+          notes = merged;
+          persistNotes();
+          renderNotes();
+          alert('ノートを読み込みました。');
+        } catch (err) {
+          alert('ファイルの読み込みに失敗しました。');
+        }
+      };
+      reader.readAsText(file);
+      event.target.value = '';
+    }
+
+    // PCキーボード操作（J=1, K=2, L=3 / F=4, D=5, S=6 / Enterでマス追加）
+    document.addEventListener('keydown', (e) => {
+      const tag = document.activeElement && document.activeElement.tagName;
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+
+      const keyMap = {
+        j: 1,
+        k: 2,
+        l: 3,
+        f: 4,
+        d: 5,
+        s: 6
+      };
+      const lower = e.key.toLowerCase();
+      if (keyMap[lower]) {
+        e.preventDefault();
+        toggleDot(keyMap[lower]);
+      } else if (e.key === 'Enter' && selectedWriteDots.size > 0) {
+        e.preventDefault();
+        addCellToSequence();
+      }
+    });
+
+    updateInputUI();
+    renderNotes();
+  </script>
+</body>
+</html>
