@@ -168,12 +168,12 @@
           />
         </div>
 
-        <!-- 6点入力パッド（打つとき：右123・左456 → 読む向き：左123・右456へ反転） -->
+        <!-- 6点入力パッド（打つとき：左456・右123 → 読む向き：左123・右456へ左右反転：1↔4, 2↔5, 3↔6） -->
         <div class="bg-slate-50 border border-slate-200 rounded-xl p-3.5 space-y-3">
           <div class="flex items-center justify-between">
             <div>
               <p class="text-sm font-bold text-slate-800">6点入力パッド</p>
-              <p class="text-xs text-slate-500">打つとき：右列 1・2・3 ／ 左列 4・5・6（追加時に読む向きへ反転）</p>
+              <p class="text-xs text-slate-500">打つとき：左列 4・5・6 ／ 右列 1・2・3（1↔4, 2↔5, 3↔6 で反転）</p>
             </div>
             <button
               id="btnClearPad"
@@ -187,13 +187,13 @@
           <!-- 左に4・5・6、右に1・2・3 -->
           <div class="flex items-center justify-center gap-8 py-1">
             <div class="flex flex-col items-center gap-2">
-              <span class="text-[11px] text-slate-500 font-medium">左側（書くときの4・5・6）</span>
+              <span class="text-[11px] text-slate-500 font-medium">左側（4・5・6）</span>
               <button type="button" data-pad-dot="4" class="dot-btn">4</button>
               <button type="button" data-pad-dot="5" class="dot-btn">5</button>
               <button type="button" data-pad-dot="6" class="dot-btn">6</button>
             </div>
             <div class="flex flex-col items-center gap-2">
-              <span class="text-[11px] text-slate-500 font-medium">右側（書くときの1・2・3）</span>
+              <span class="text-[11px] text-slate-500 font-medium">右側（1・2・3）</span>
               <button type="button" data-pad-dot="1" class="dot-btn">1</button>
               <button type="button" data-pad-dot="2" class="dot-btn">2</button>
               <button type="button" data-pad-dot="3" class="dot-btn">3</button>
@@ -205,7 +205,7 @@
               <span>打った点：</span>
               <span id="padWriteDotsText" class="font-mono font-bold text-slate-800">なし</span>
               <span class="mx-1">→</span>
-              <span>読む向き（左123・右456）：</span>
+              <span>反転後（読む向き・左123/右456）：</span>
               <span id="padReadDotsText" class="font-mono font-bold text-blue-700">なし</span>
             </div>
             <div class="flex items-center gap-2">
@@ -227,11 +227,11 @@
           </div>
         </div>
 
-        <!-- 記録する点字（読む向きの点番号リストをスペース区切りで保持：例 "1,4 2,4,6"） -->
+        <!-- 記録する点字（反転後の読む向きの点番号リストをスペース区切りで保持：例 "1,3,5,6"） -->
         <div>
           <div class="flex items-center justify-between mb-1">
             <label for="noteBraille" class="block text-sm font-medium text-slate-700">
-              点字データ（読む向きの点番号・空白は "/"）
+              点字データ（反転後の読む向き・空白は "/"）
             </label>
             <button
               id="btnBackspaceCell"
@@ -244,7 +244,7 @@
           <input
             id="noteBraille"
             type="text"
-            placeholder="例：1,4 2,4,6 / 3"
+            placeholder="例：1,3,5,6 / 3"
             class="w-full px-3 py-2 text-sm font-mono border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
           <div id="braillePreview" class="mt-2 flex flex-wrap items-center gap-2 min-h-[34px]"></div>
@@ -306,12 +306,25 @@
     const padWriteDotsTextEl = document.getElementById('padWriteDotsText');
     const padReadDotsTextEl = document.getElementById('padReadDotsText');
 
-    // 打つとき（右123・左456）から読むとき（左123・右456）への反転対応
+    // 左右反転対応表（点の位置・番号は固定し、左右のみ入れ替え）
     // 1 <-> 4, 2 <-> 5, 3 <-> 6
-    const INVERT_MAP = { 1: 4, 2: 5, 3: 6, 4: 1, 5: 2, 6: 3 };
+    const FLIP_HORIZONTAL_MAP = Object.freeze({
+      1: 4,
+      2: 5,
+      3: 6,
+      4: 1,
+      5: 2,
+      6: 3,
+    });
 
-    function invertDot(dot) {
-      return INVERT_MAP[dot] || dot;
+    function flipDotHorizontal(dot) {
+      return FLIP_HORIZONTAL_MAP[dot] ?? dot;
+    }
+
+    function getFlippedSortedDots(dotCollection) {
+      return Array.from(dotCollection)
+        .map(flipDotHorizontal)
+        .sort((a, b) => a - b);
     }
 
     function loadNotes() {
@@ -354,7 +367,7 @@
       return `<span class="braille-cell" title="読む向き：${readDots.join(',') || 'なし'}">${dotsHtml}</span>`;
     }
 
-    // 点字文字列（例: "1,4 2,4,6 / 3"）をプレビュー表示
+    // 点字文字列（例: "1,3,5,6 / 3"）をプレビュー表示
     function renderBrailleSequence(brailleStr) {
       const trimmed = (brailleStr || '').trim();
       if (!trimmed) {
@@ -475,7 +488,7 @@
 
     function updatePadUi() {
       const writeSorted = Array.from(selectedPadDots).sort((a, b) => a - b);
-      const readSorted = writeSorted.map(invertDot).sort((a, b) => a - b);
+      const readSorted = getFlippedSortedDots(selectedPadDots);
 
       document.querySelectorAll('[data-pad-dot]').forEach((btn) => {
         const d = parseInt(btn.getAttribute('data-pad-dot'), 10);
@@ -564,9 +577,7 @@
 
     document.getElementById('btnAddCell').addEventListener('click', () => {
       if (selectedPadDots.size === 0) return;
-      const readSorted = Array.from(selectedPadDots)
-        .map(invertDot)
-        .sort((a, b) => a - b);
+      const readSorted = getFlippedSortedDots(selectedPadDots);
       appendToBrailleInput(readSorted.join(','));
       selectedPadDots.clear();
       updatePadUi();
