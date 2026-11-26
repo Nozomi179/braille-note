@@ -218,27 +218,11 @@
           </div>
         </div>
 
-        <!-- 点字データ（空白は "/"） -->
+        <!-- 点字プレビュー -->
         <div>
-          <div class="flex items-center justify-between mb-1">
-            <label for="noteBraille" class="block text-sm font-medium text-slate-700">
-              点字データ（空白は "/"）
-            </label>
-            <button
-              id="btnBackspaceCell"
-              type="button"
-              class="text-xs text-slate-500 hover:text-slate-700 underline"
-            >
-              末尾を1つ消す
-            </button>
-          </div>
-          <input
-            id="noteBraille"
-            type="text"
-            placeholder="例：2,3,4,6 / 3"
-            class="w-full px-3 py-2 text-sm font-mono border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-          <div id="braillePreview" class="mt-2 flex flex-wrap items-center gap-2 min-h-[34px]"></div>
+          <span class="block text-sm font-medium text-slate-700 mb-1">点字プレビュー（読む側表示）</span>
+          <input id="noteBraille" type="hidden" />
+          <div id="braillePreview" class="p-3 bg-slate-50 border border-slate-200 rounded-xl flex flex-wrap items-center gap-2 min-h-[48px]"></div>
         </div>
 
         <div>
@@ -571,19 +555,6 @@
 
     document.getElementById('btnInsertSpace').addEventListener('click', () => {
       appendToBrailleInput('/');
-    });
-
-    document.getElementById('btnBackspaceCell').addEventListener('click', () => {
-      const current = (noteBrailleEl.value || '').trim();
-      if (!current) return;
-      const tokens = current.split(/\s+/);
-      tokens.pop();
-      noteBrailleEl.value = tokens.join(' ');
-      braillePreviewEl.innerHTML = renderBrailleSequence(noteBrailleEl.value);
-    });
-
-    noteBrailleEl.addEventListener('input', () => {
-      braillePreviewEl.innerHTML = renderBrailleSequence(noteBrailleEl.value);
     });
 
     noteFormEl.addEventListener('submit', (e) => {
