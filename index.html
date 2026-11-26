@@ -108,7 +108,7 @@
         <input
           id="searchInput"
           type="text"
-          placeholder="キーワードで検索（タイトル・読み方・メモ・タグ）..."
+          placeholder="キーワードで検索（タイトル・ページ・読み方・メモ・タグ）..."
           class="flex-1 px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
         <select
@@ -170,19 +170,33 @@
             id="noteTitle"
             type="text"
             required
-            placeholder="例：長音符のメモ、濁音の確認など"
+            placeholder="例：数符の効力、長音符のメモなど"
             class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         </div>
 
-        <div>
-          <label for="noteTag" class="block text-sm font-medium text-slate-700 mb-1">タグ（任意）</label>
-          <input
-            id="noteTag"
-            type="text"
-            placeholder="例：基本ルール、分かち書き、復習"
-            class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label for="notePage" class="block text-sm font-medium text-slate-700 mb-1">
+              手引きのページ（任意）
+            </label>
+            <input
+              id="notePage"
+              type="text"
+              placeholder="例：p.49、49、付録12"
+              class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+
+          <div>
+            <label for="noteTag" class="block text-sm font-medium text-slate-700 mb-1">タグ（任意）</label>
+            <input
+              id="noteTag"
+              type="text"
+              placeholder="例：数符、基本ルール、復習"
+              class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
         </div>
 
         <!-- 6点入力パッド（左：4・5・6／右：1・2・3） -->
@@ -308,6 +322,7 @@
     const noteFormEl = document.getElementById('noteForm');
     const editIdEl = document.getElementById('editId');
     const noteTitleEl = document.getElementById('noteTitle');
+    const notePageEl = document.getElementById('notePage');
     const noteTagEl = document.getElementById('noteTag');
     const noteBrailleEl = document.getElementById('noteBraille');
     const noteReadingEl = document.getElementById('noteReading');
@@ -444,7 +459,7 @@
         const matchTag = !selectedTag || (note.tag || '').trim() === selectedTag;
         if (!matchTag) return false;
         if (!query) return true;
-        const hay = `${note.title || ''} ${note.reading || ''} ${note.tag || ''} ${note.memo || ''} ${note.braille || ''}`.toLowerCase();
+        const hay = `${note.title || ''} ${note.page || ''} ${note.reading || ''} ${note.tag || ''} ${note.memo || ''} ${note.braille || ''}`.toLowerCase();
         return hay.includes(query);
       });
 
@@ -463,6 +478,10 @@
 
       notesListEl.innerHTML = filtered
         .map((note) => {
+          const pageBadge = note.page
+            ? `<span class="px-2 py-0.5 text-xs rounded-full bg-amber-50 text-amber-800 border border-amber-200">📖 ${escapeHtml(note.page)}</span>`
+            : '';
+
           const tagBadge = note.tag
             ? `<span class="px-2 py-0.5 text-xs rounded-full bg-blue-50 text-blue-700 border border-blue-200">${escapeHtml(note.tag)}</span>`
             : '';
@@ -482,6 +501,7 @@
                 <div class="space-y-1">
                   <div class="flex flex-wrap items-center gap-2">
                     <h3 class="font-bold text-slate-800 text-base">${escapeHtml(note.title)}</h3>
+                    ${pageBadge}
                     ${tagBadge}
                   </div>
                   <p class="text-[11px] text-slate-400">更新：${escapeHtml(note.updatedAt || '')}</p>
@@ -544,6 +564,7 @@
       modalTitleEl.textContent = '新しいノートを作成';
       editIdEl.value = '';
       noteTitleEl.value = '';
+      notePageEl.value = '';
       noteTagEl.value = '';
       noteBrailleEl.value = '';
       noteReadingEl.value = '';
@@ -562,6 +583,7 @@
       modalTitleEl.textContent = 'ノートを編集';
       editIdEl.value = target.id;
       noteTitleEl.value = target.title || '';
+      notePageEl.value = target.page || '';
       noteTagEl.value = target.tag || '';
       noteBrailleEl.value = target.braille || '';
       noteReadingEl.value = target.reading || '';
@@ -648,6 +670,7 @@
       const payload = {
         id: id || `note_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
         title,
+        page: (notePageEl.value || '').trim(),
         tag: (noteTagEl.value || '').trim(),
         braille: (noteBrailleEl.value || '').trim(),
         reading: (noteReadingEl.value || '').trim(),
@@ -711,6 +734,7 @@
           notes = parsed.map((item) => ({
             id: item.id || `note_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
             title: String(item.title || '無題'),
+            page: String(item.page || ''),
             tag: String(item.tag || ''),
             braille: String(item.braille || ''),
             reading: String(item.reading || ''),
