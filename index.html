@@ -175,17 +175,17 @@
           />
         </div>
 
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 items-start">
           <div>
             <label for="notePage" class="block text-sm font-medium text-slate-700 mb-1">
-              手引きのページ（任意）
+              手引きのページ（任意・改行可）
             </label>
-            <input
+            <textarea
               id="notePage"
-              type="text"
-              placeholder="例：p.49、49、付録12"
+              rows="2"
+              placeholder="例：p.49&#10;p.112（改行して複数入力できます）"
               class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
+            ></textarea>
           </div>
 
           <div>
@@ -479,7 +479,7 @@
       notesListEl.innerHTML = filtered
         .map((note) => {
           const pageBadge = note.page
-            ? `<span class="px-2 py-0.5 text-xs rounded-full bg-amber-50 text-amber-800 border border-amber-200">📖 ${escapeHtml(note.page)}</span>`
+            ? `<span class="px-2 py-0.5 text-xs rounded-lg bg-amber-50 text-amber-800 border border-amber-200 whitespace-pre-line leading-snug">📖 ${escapeHtml(note.page)}</span>`
             : '';
 
           const tagBadge = note.tag
