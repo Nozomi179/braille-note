@@ -45,6 +45,23 @@
       background-color: #f1f5f9;
       border: 1px solid #cbd5e1;
       border-radius: 6px;
+      transition: all 0.12s ease;
+    }
+    .preview-removable-cell {
+      cursor: pointer;
+    }
+    .preview-removable-cell:hover .braille-cell {
+      background-color: #fef2f2;
+      border-color: #f87171;
+    }
+    .preview-removable-blank {
+      cursor: pointer;
+      transition: all 0.12s ease;
+    }
+    .preview-removable-blank:hover {
+      background-color: #fef2f2;
+      border-color: #f87171;
+      color: #dc2626;
     }
     .braille-dot {
       width: 10px;
@@ -218,9 +235,12 @@
           </div>
         </div>
 
-        <!-- 点字プレビュー -->
+        <!-- 点字プレビュー（マスをタップすると削除） -->
         <div>
-          <span class="block text-sm font-medium text-slate-700 mb-1">点字プレビュー（読む側表示）</span>
+          <div class="flex items-center justify-between mb-1">
+            <span class="block text-sm font-medium text-slate-700">点字プレビュー（読む側表示）</span>
+            <span class="text-[11px] text-slate-500">マスをタップするとそのマスを消せます</span>
+          </div>
           <input id="noteBraille" type="hidden" />
           <div id="braillePreview" class="p-3 bg-slate-50 border border-slate-200 rounded-xl flex flex-wrap items-center gap-2 min-h-[48px]"></div>
         </div>
@@ -325,6 +345,12 @@
         .replace(/'/g, '&#39;');
     }
 
+    function parseBrailleTokens(brailleStr) {
+      const trimmed = (brailleStr || '').trim();
+      if (!trimmed) return [];
+      return trimmed.split(/\s+/).filter(Boolean);
+    }
+
     // 点の配列を表示するときに左右反転（1↔4, 2↔5, 3↔6）して6点セルHTMLを生成
     function renderBrailleCellHtml(dots) {
       const flippedDots = flipDotsSorted(dots);
@@ -339,13 +365,12 @@
       return `<span class="braille-cell" aria-label="点字マス">${dotsHtml}</span>`;
     }
 
-    // 点字文字列（例: "2,3,4,6 / 3"）を点字表示（6点マス）に変換
+    // ノート一覧などの読み取り専用表示用
     function renderBrailleSequence(brailleStr) {
-      const trimmed = (brailleStr || '').trim();
-      if (!trimmed) {
+      const tokens = parseBrailleTokens(brailleStr);
+      if (tokens.length === 0) {
         return '<span class="text-xs text-slate-400">点字なし</span>';
       }
-      const tokens = trimmed.split(/\s+/);
       return tokens
         .map((token) => {
           if (token === '/') {
@@ -356,6 +381,38 @@
             .map((n) => parseInt(n.trim(), 10))
             .filter((n) => n >= 1 && n <= 6);
           return renderBrailleCellHtml(nums);
+        })
+        .join('');
+    }
+
+    // プレビュー用（各マスをタップして削除できるボタンとして描画）
+    function renderRemovablePreview(brailleStr) {
+      const tokens = parseBrailleTokens(brailleStr);
+      if (tokens.length === 0) {
+        return '<span class="text-xs text-slate-400">6点パッドからマスを追加するとここに表示されます</span>';
+      }
+      return tokens
+        .map((token, idx) => {
+          if (token === '/') {
+            return `<button
+              type="button"
+              data-token-index="${idx}"
+              title="タップしてこの空白を削除"
+              aria-label="${idx + 1}番目の空白を削除"
+              class="preview-removable-blank inline-flex items-center px-2 py-1 text-xs text-slate-400 bg-white rounded border border-dashed border-slate-300"
+            >空白</button>`;
+          }
+          const nums = token
+            .split(',')
+            .map((n) => parseInt(n.trim(), 10))
+            .filter((n) => n >= 1 && n <= 6);
+          return `<button
+            type="button"
+            data-token-index="${idx}"
+            title="タップしてこのマスを削除"
+            aria-label="${idx + 1}番目の点字マスを削除"
+            class="preview-removable-cell inline-flex items-center justify-center rounded-md focus:outline-none focus:ring-2 focus:ring-red-400"
+          >${renderBrailleCellHtml(nums)}</button>`;
         })
         .join('');
     }
@@ -462,10 +519,22 @@
       });
     }
 
+    function refreshPreview() {
+      braillePreviewEl.innerHTML = renderRemovablePreview(noteBrailleEl.value);
+    }
+
     function appendToBrailleInput(token) {
       const current = (noteBrailleEl.value || '').trim();
       noteBrailleEl.value = current ? `${current} ${token}` : token;
-      braillePreviewEl.innerHTML = renderBrailleSequence(noteBrailleEl.value);
+      refreshPreview();
+    }
+
+    function removeTokenAt(index) {
+      const tokens = parseBrailleTokens(noteBrailleEl.value);
+      if (index < 0 || index >= tokens.length) return;
+      tokens.splice(index, 1);
+      noteBrailleEl.value = tokens.join(' ');
+      refreshPreview();
     }
 
     function openCreateModal() {
@@ -477,7 +546,7 @@
       noteMemoEl.value = '';
       selectedPadDots.clear();
       updatePadUi();
-      braillePreviewEl.innerHTML = renderBrailleSequence('');
+      refreshPreview();
       noteModalEl.classList.remove('hidden');
       noteModalEl.classList.add('flex');
       noteTitleEl.focus();
@@ -494,7 +563,7 @@
       noteMemoEl.value = target.memo || '';
       selectedPadDots.clear();
       updatePadUi();
-      braillePreviewEl.innerHTML = renderBrailleSequence(noteBrailleEl.value);
+      refreshPreview();
       noteModalEl.classList.remove('hidden');
       noteModalEl.classList.add('flex');
       noteTitleEl.focus();
@@ -525,6 +594,15 @@
 
     noteModalEl.addEventListener('click', (e) => {
       if (e.target === noteModalEl) closeModal();
+    });
+
+    braillePreviewEl.addEventListener('click', (e) => {
+      const targetBtn = e.target.closest('[data-token-index]');
+      if (!targetBtn) return;
+      const idx = parseInt(targetBtn.getAttribute('data-token-index'), 10);
+      if (!Number.isNaN(idx)) {
+        removeTokenAt(idx);
+      }
     });
 
     document.querySelectorAll('[data-pad-dot]').forEach((btn) => {
